@@ -1,0 +1,54 @@
+buildscript {
+    ext.kotlin_version = '1.2.31'
+    ext.kotlin_coroutines_version = '0.22.3'
+    ext.javacv_platform_version = '1.4.1'
+    ext.sqlite_version = '3.21.0.1'
+
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+group 'PriVideoUtils'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'kotlin-platform-jvm'
+
+repositories {
+    mavenCentral()
+}
+
+sourceSets {
+    main.java.srcDirs = ['src/main/kotlin']
+    main.resources.srcDirs = ['src/main/resources']
+}
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    testCompile "junit:junit:4.12"
+    testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
+    testCompile "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
+    compile("org.bytedeco:javacv-platform:$javacv_platform_version")
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'work.airz.MainKt'
+    }
+    from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}

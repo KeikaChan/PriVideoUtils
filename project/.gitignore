@@ -7,6 +7,10 @@ libs
 *.bin
 *.mp4
 *.png
+*.log
+*.temp
+*.mbtree
+/encoder/*
 
 # Ignore Gradle GUI config
 gradle-app.setting

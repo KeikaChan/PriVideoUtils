@@ -1,46 +1,71 @@
 package work.airz
 
-
-import org.bytedeco.javacv.OpenCVFrameConverter
+import net.bramp.ffmpeg.FFmpeg
+import net.bramp.ffmpeg.FFmpegExecutor
+import net.bramp.ffmpeg.FFprobe
+import net.bramp.ffmpeg.builder.FFmpegBuilder
 import org.bytedeco.javacpp.opencv_core.*
-import org.bytedeco.javacpp.opencv_highgui.*
-import org.bytedeco.javacpp.opencv_imgcodecs.imwrite
-import org.bytedeco.javacpp.opencv_imgproc.*
-import org.bytedeco.javacpp.opencv_objdetect.*
-import org.bytedeco.javacv.FFmpegFrameGrabber
 import java.io.File
 
 
 fun main(args: Array<String>) {
-    var converterToMat = OpenCVFrameConverter.ToMat()
-
-    val face_cascade = CascadeClassifier("lbpcascade_animeface.xml")
-
-
-    var grabber = FFmpegFrameGrabber(File("output.mp4"))
-    grabber.start()
-
-    var videoMat: Mat
-    var count=0
-    while (grabber.frameNumber < grabber.lengthInFrames) {
-        var grabbed = grabber.grabImage() ?: break
-        videoMat = converterToMat.convert(grabbed)
-        var videoMatGray = Mat()
-        cvtColor(videoMat, videoMatGray, COLOR_BGRA2GRAY)
-        equalizeHist(videoMatGray, videoMatGray)
-        var faces = RectVector()
-
-        face_cascade.detectMultiScale(videoMatGray, faces,1.1,5,0,Size(100,100),Size(1000,1000))
-        for (i in 0 until faces!!.size().toInt()) {
-            val face_i = faces[i.toLong()]
-            rectangle(videoMat, face_i, Scalar(0.0, 255.0, 0.0, 4.0),10,1,0)
-        }
-        if (faces!!.size() > 0) {
-            imshow("face_recognizer", videoMat)
-            imwrite("out-$count.png",videoMat)
-            count++
-            println("face detected!")
-        }
+    val currentDir = System.getProperty("user.dir")
+    val ffmpegExec = File(currentDir + File.separator + "encoder", getExtByPlatform("ffmpeg"))
+    val ffprobeExec = File(currentDir + File.separator + "encoder", getExtByPlatform("ffprobe"))
+    if (!ffmpegExec.exists() || !ffprobeExec.exists()) {
+        println("encoder does not exist!")
     }
 
+
+    val ffmpeg = FFmpeg(ffmpegExec.absolutePath)
+    val ffmprobe = FFprobe(ffprobeExec.absolutePath)
+    val fFmpegProbeResult = ffmprobe.probe(File("encoder", "output.mp4").absolutePath)
+
+    /**
+     * formatについて
+     * streams[0]がビデオ,streams[1]がオーディオ
+     */
+    val format = ffmprobe.probe(File("encoder", "output.mp4").absolutePath)
+    val videoFormat = format.streams[0]
+    val audioFormat = format.streams[1]
+
+//    //now encoding
+    val ffmpegBuilder = FFmpegBuilder()
+            .setInput(File("encoder", "output.mp4").absolutePath)
+            .overrideOutputFiles(true)
+            .addOutput(File("encoder", "output_neko.mp4").absolutePath)
+            .setAudioChannels(audioFormat.channels)
+            .setAudioCodec("aac")        // using the aac codec
+            .setAudioSampleRate(audioFormat.sample_rate)  // at 48KHz
+            .setAudioBitRate(audioFormat.bit_rate)      // at 32 kbit/s
+
+            .setVideoCodec("libx264")     // Video using x264
+            .setVideoFrameRate(videoFormat.r_frame_rate.numerator, videoFormat.r_frame_rate.denominator)     // at 24 frames per second
+            .setVideoBitRate(videoFormat.bit_rate)
+            .setVideoResolution(1080, 1920) // at 640x480 resolution
+            .setFormat("mp4")
+            .addExtraArgs("-vf", "transpose=2")
+//            .setVideoQuality(16.0)
+            .done()
+
+    val executor = FFmpegExecutor(ffmpeg, ffmprobe)
+    val job = executor.createTwoPassJob(ffmpegBuilder)
+
+    job.run()
+
+}
+
+
+fun getExtByPlatform(prefix: String): String {
+    return when {
+        getPlatform() == PlatForm.WINDOWS -> "$prefix.exe"
+        else -> prefix
+    }
+}
+
+fun rotate(src: IplImage, angle: Int): IplImage {
+    val img = IplImage.create(src.height(), src.width(), src.depth(), src.nChannels())
+    cvTranspose(src, img)
+    cvFlip(img, img, angle)
+    return img
 }

@@ -7,7 +7,7 @@ import java.awt.image.BufferedImage
  * 画像の探索関連をまとめています
  * @author khrom
  */
-class ImageSearch :MediaIO(){
+class ImageSearch : MediaIO() {
 
     /**
      * ベクトル変換部分
@@ -39,7 +39,7 @@ class ImageSearch :MediaIO(){
      * @param videoHash 辞書データ
      * @return 似た画像のリスト List(titleId_storyId_frame)
      */
-    fun getSimilarImage(hash: Long, level: Int, videoHash: List<Pair<Long,ByteArray>>): List<HashInfo> {
+    fun getSimilarImage(hash: Long, level: Int, videoHash: List<Pair<Long, ByteArray>>): List<HashInfo> {
         var result: List<HashInfo> = if (level <= 3) {
             getSimilarHash(hash, level, videoHash)
         } else {
@@ -198,6 +198,59 @@ class ImageSearch :MediaIO(){
             }
         }
         return result.toList()
+    }
+
+    fun isSameImage(hash: Long, level: Int, target: Long): Boolean {
+        var flags = false
+        if (level >= 5) return false
+        if (level >= 0) { //完全一致
+            flags = hash == target
+        }
+
+        if (level >= 1) {
+            for (i in 0 until 64) {
+                if (hash == target.xor(1L.shl(i))) {
+                    flags = true
+                }
+            }
+        }
+
+        if (level >= 2) {
+            for (i in 0 until 63) {
+                for (j in i + 1 until 64) {
+                    if (hash == target.xor(1L.shl(i)).xor(1L.shl(j))) {
+                        flags = true
+                    }
+                }
+            }
+        }
+
+        if (level >= 3) {
+            for (i in 0 until 62) {
+                for (j in i + 1 until 63) {
+                    for (k in j + 1 until 64) {
+                        if (hash == target.xor(1L.shl(i)).xor(1L.shl(j)).xor(1L.shl(k))) {
+                            flags = true
+                        }
+                    }
+                }
+            }
+        }
+
+        if (level >= 4) {
+            for (i in 0 until 61) {
+                for (j in i + 1 until 62) {
+                    for (k in j + 1 until 63) {
+                        for (l in k + 1 until 64) {
+                            if (hash == target.xor(1L.shl(i)).xor(1L.shl(j)).xor(1L.shl(k)).xor(1L.shl(l))) {
+                                flags = true
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return flags
     }
 
     /**

@@ -1,6 +1,6 @@
 buildscript {
-    ext.kotlin_version = '1.2.31'
-    ext.kotlin_coroutines_version = '0.22.3'
+    ext.kotlin_version = '1.2.40'
+    ext.kotlin_coroutines_version = '0.22.5'
     ext.javacv_platform_version = '1.4.1'
 
     repositories {
@@ -47,8 +47,8 @@ dependencies {
         exclude group: "org.bytedeco.javacpp-presets", module: "libfreenect2-platform"
         exclude group: "org.bytedeco.javacpp-presets", module: "librealsense"
         exclude group: "org.bytedeco.javacpp-presets", module: "librealsense-platform"
-        exclude group: "org.bytedeco.javacpp-presets", module: "videoinput"
-        exclude group: "org.bytedeco.javacpp-presets", module: "videoinput-platform"
+//        exclude group: "org.bytedeco.javacpp-presets", module: "videoinput"
+//        exclude group: "org.bytedeco.javacpp-presets", module: "videoinput-platform"
         exclude group: "org.bytedeco.javacpp-presets", module: "artoolkitplus"
         exclude group: "org.bytedeco.javacpp-presets", module: "artoolkitplus-platform"
     }

@@ -16,3 +16,11 @@ fun getPlatform(): Enum<PlatForm> {
         else -> PlatForm.UNKNOWN
     }
 }
+
+
+fun getExtByPlatform(prefix: String): String {
+    return when {
+        getPlatform() == PlatForm.WINDOWS -> "$prefix.exe"
+        else -> prefix
+    }
+}

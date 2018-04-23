@@ -11,10 +11,15 @@ buildscript {
     }
 }
 
+apply plugin: 'kotlin-platform-jvm'
+apply plugin: 'application'
+
 group 'PriVideoUtils'
 version '1.0-SNAPSHOT'
 
-apply plugin: 'kotlin-platform-jvm'
+mainClassName = 'work.airz.MainKt'
+
+applicationDefaultJvmArgs = ["-Djavacpp.platform=macosx-x86_64"]
 
 repositories {
     mavenCentral()
@@ -63,7 +68,20 @@ jar {
     manifest {
         attributes 'Main-Class': 'work.airz.MainKt'
     }
-    from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    from sourceSets.main.output
+    exclude("**/*android*.jar")
+    exclude("**/*-ios-*.jar")
+    exclude("**/*armhf.jar")
+    exclude("**/*ppc64le.jar")
+    exclude("**/*x86.jar")//x86系も排除する場合
+
+    from configurations.compile
+            .filter({!(it.name=~ /.*android.*\.jar/)})
+            .filter({!(it.name=~ /.*-ios-.*\.jar/)})
+            .filter({!(it.name=~ /.*armhf\.jar/)})
+            .filter({!(it.name=~ /.*ppc64le\.jar/)})
+            .filter({!(it.name=~ /.*x86\.jar/)})
+            .collect { it.isDirectory() ? it : zipTree(it) }
 }
 
 compileKotlin {
@@ -71,4 +89,17 @@ compileKotlin {
 }
 compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
+}
+
+distributions {
+    main {
+        contents {
+            exclude("**/*android*.jar")
+            exclude("**/*-ios-*.jar")
+            exclude("**/*armhf.jar")
+            exclude("**/*ppc64le.jar")
+            exclude("**/*x86.jar")//x86系も排除する場合
+
+        }
+    }
 }
